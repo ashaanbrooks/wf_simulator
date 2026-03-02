@@ -1,0 +1,77 @@
+# Library imports
+import streamlit as st
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import binom
+
+# User input for the parameters of the simulation
+# We contain them within a form, so that the simulation only runs when the user clicks the "Run Simulation" button
+with st.form("wf_form"):
+    N_e = st.slider("Population size", min_value=100, max_value=10000, value=1000, step=10)
+    u = st.slider("Forward mutation rate", min_value=0.000, max_value=1.000, value=0.000, step=0.001)
+    v = st.slider("Backward mutation rate", min_value=0.000, max_value=1.000, value=0.000, step=0.001)
+    w_AA = st.slider("Fitness of AA genotype", min_value=0.0, max_value=2.0, value=1.0, step=0.01)
+    w_Aa = st.slider("Fitness of Aa genotype", min_value=0.0, max_value=2.0, value=1.0, step=0.01)
+    w_aa = st.slider("Fitness of aa genotype", min_value=0.0, max_value=2.0, value=1.0, step=0.01)
+    generations = st.slider("Number of generations", min_value=10, max_value=10000, value=100, step=10)
+    num_trajectories = st.slider("Number of replicates", min_value=1, max_value=100, value=10, step=1)
+    N_A0 = st.slider("Initial number of allele A copies", min_value=0, max_value=N_e*2, value=N_e, step=1)
+    submit_button = st.form_submit_button(label="Run Simulation")
+
+# Function: build the W-F transition matrix based on input parameters
+def wright_fisher_transition(N, u, v, w_AA, w_Aa, w_aa):
+    
+    # Vectorized computation of the transition probabilities
+    i = np.arange(N+1)
+    p = ((((i/N) ** 2) * w_AA + (i/N) * (1 - i/N) * w_Aa) * (1-u) + ((1 - ((i/N)) ** 2) * w_aa + (i/N) * (1 - i/N) * w_Aa) * v) / (w_AA * (i/N) ** 2 + w_Aa * 2 * (i/N) * (1 - i/N) + w_aa * (1 - i/N) ** 2)
+    j = np.arange(N+1)              # shape (N+1,)
+    
+    # Broadcast: p is (N+1, 1), j is (1, N+1) → P is (N+1, N+1)
+    P = binom.pmf(j[np.newaxis, :], N, p[:, np.newaxis])
+    return P
+
+
+# Function: simulate allele frequency trajectories using the transition matrix
+def simulate_trajectories(P, N_A0, generations, num_trajectories):
+    # Vectorized simulation of trajectories
+    trajectories = np.zeros((num_trajectories, generations+1), dtype=int)
+    trajectories[:, 0] = N_A0
+    P_cumsum = np.cumsum(P, axis=1) # Cumulative probabilities for efficient sampling
+    
+    for g in range(1, generations+1):
+        current = trajectories[:, g-1]           # shape (num_trajectories,)
+        r = np.random.random(num_trajectories)    # one random number per trajectory
+        # For each trajectory, look up its row and find where r falls (in the list of cumulative probabilities)
+        trajectories[:, g] = np.array([
+            np.searchsorted(P_cumsum[current[t]], r[t]) 
+            for t in range(num_trajectories)
+        ])
+    return trajectories
+
+# When the user clicks "Run simulation"
+if submit_button:
+    
+    # Number of alleles in the population (2N for diploids)
+    N = 2 * N_e
+    
+    # Build the transition matrix
+    P = wright_fisher_transition(N, u, v, w_AA, w_Aa, w_aa)
+    
+    # Simulate the trajectories
+    trajectories = simulate_trajectories(P, N_A0, generations, num_trajectories)
+    
+    # Convert allele copy numbers to frequencies for plotting
+    trajectories = trajectories / N
+
+    # Plot the trajectories
+    plt.figure(figsize=(10, 6))
+    for t in range(num_trajectories):
+        plt.plot(trajectories[t], alpha=0.5)
+    plt.xlabel("Generation")
+    plt.ylabel("Frequency of allele A")
+    plt.title("Wright-Fisher Simulation with Mutation")
+    plt.grid()
+    st.pyplot(plt)
+
+
+
