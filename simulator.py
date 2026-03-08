@@ -46,6 +46,14 @@ def simulate_trajectories(P, N_A0, generations, num_trajectories):
     
     return trajectories
 
+def calculate_simulated_stats(trajectories, N):
+
+    n_fixations = np.sum(trajectories[:, -1] == N) # Number of trajectories that end with allele A fixed
+    n_eliminations = np.sum(trajectories[:, -1] == 0) # Number of trajectories that end with allele A lost
+    time_to_fixation = np.mean(np.where(trajectories == N)[1]) # Average time to fixation for trajectories that fix
+    time_to_elimination = np.mean(np.where(trajectories == 0)[1]) # Average time to elimination for trajectories that are lost
+    return n_fixations, n_eliminations, time_to_fixation, time_to_elimination
+
 # When the user clicks "Run simulation"
 if submit_button:
     
@@ -59,17 +67,23 @@ if submit_button:
     trajectories = simulate_trajectories(P, N_A0, generations, num_trajectories)
     
     # Convert allele copy numbers to frequencies for plotting
-    trajectories = trajectories / N
+    trajectories_freqs = trajectories / N
 
     # Plot the trajectories
     plt.figure(figsize=(10, 6))
     for t in range(num_trajectories):
-        plt.plot(trajectories[t], alpha=0.5)
+        plt.plot(trajectories_freqs[t], alpha=0.5)
     plt.xlabel("Generation")
     plt.ylabel("Frequency of allele A")
     plt.title("Wright-Fisher Simulation with Mutation")
     plt.grid()
     st.pyplot(plt)
 
+    # Calculate and display statistics
+    n_fixations, n_eliminations, time_to_fixation, time_to_elimination = calculate_simulated_stats(trajectories, N)
+    st.write(f"Number of fixations: {n_fixations}")
+    st.write(f"Number of eliminations: {n_eliminations}")
+    st.write(f"Average time to fixation: {time_to_fixation:.2f} generations")
+    st.write(f"Average time to elimination: {time_to_elimination:.2f} generations")
 
 
