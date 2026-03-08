@@ -33,19 +33,17 @@ def wright_fisher_transition(N, u, v, w_AA, w_Aa, w_aa):
 
 # Function: simulate allele frequency trajectories using the transition matrix
 def simulate_trajectories(P, N_A0, generations, num_trajectories):
-    # Vectorized simulation of trajectories
+    P_cumsum = np.cumsum(P, axis=1) # Turn the probability matrix into a cumulative distribution for sampling
+    
     trajectories = np.zeros((num_trajectories, generations+1), dtype=int)
     trajectories[:, 0] = N_A0
-    P_cumsum = np.cumsum(P, axis=1) # Cumulative probabilities for efficient sampling
     
     for g in range(1, generations+1):
-        current = trajectories[:, g-1]           # shape (num_trajectories,)
-        r = np.random.random(num_trajectories)    # one random number per trajectory
-        # For each trajectory, look up its row and find where r falls (in the list of cumulative probabilities)
-        trajectories[:, g] = np.array([
-            np.searchsorted(P_cumsum[current[t]], r[t]) 
-            for t in range(num_trajectories)
-        ])
+        current = trajectories[:, g-1] # Current state (allele copy number) for each trajectory
+        r = np.random.random(num_trajectories) # Sample uniform random numbers for each trajectory
+        rows = P_cumsum[current] # Get the cumulative probabilities for the current states
+        trajectories[:, g] = np.sum(rows < r[:, np.newaxis], axis=1) # Sample the next state based on where the random number falls in the cumulative distribution
+    
     return trajectories
 
 # When the user clicks "Run simulation"
