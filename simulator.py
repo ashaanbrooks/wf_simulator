@@ -4,6 +4,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import binom
 
+st.markdown(r"""
+# Wright-Fisher Simulator
+You can adjust the parameters of the simulation using the sliders below, and then click "Run Simulation" to see the results. If the simulation is taking too long to run, try reducing the population size or the number of replicates.
+""")
+
 # User input for the parameters of the simulation
 # We contain them within a form, so that the simulation only runs when the user clicks the "Run Simulation" button
 with st.form("wf_form"):
@@ -56,6 +61,39 @@ def calculate_simulated_stats(trajectories, N):
     time_to_elimination = np.mean(np.where(trajectories == 0)[1]) # Average time to elimination for trajectories that are lost
     return n_fixations, n_eliminations, time_to_fixation, time_to_elimination
 
+def calculate_theoretical_stats(P, N_A0, u, v):
+    # Calculate the theoretical fixation probability and expected time to fixation
+    # Only for the case where there is no mutation
+    if u == 0 and v == 0:
+        absorption_probabilities = calculate_absorption_probabilities(P)
+        expected_times = calculate_expected_times_to_absorption(P)
+        fixation_probability = absorption_probabilities[N_A0, 1] # Fixation probability from the initial state
+        elimination_probability = absorption_probabilities[N_A0, 0] # Elimination probability from the initial state
+        expected_time_to_absorption = expected_times[N_A0] # Expected time to absorption from the initial state
+    else:
+        fixation_probability = None
+        elimination_probability = None
+        expected_time_to_absorption = None
+    return fixation_probability, elimination_probability, expected_time_to_absorption
+
+def calculate_absorption_probabilities(P):
+    # Calculate the absorption probabilities for fixation and elimination from the transition matrix
+    Q = P[1:-1, 1:-1] # Probability of moving from transient states to transient states
+    R = P[1:-1, [0, -1]] # Probability of moving from transient states to absorbing states
+    I = np.identity(Q.shape[0]) # Identity matrix
+    N = np.linalg.inv(I - Q) # Fundamental matrix
+    absorption_probabilities = N @ R # Absorption probabilities for each transient state
+    return absorption_probabilities
+
+def calculate_expected_times_to_absorption(P):
+    # Calculate the expected times to absorption for fixation and elimination from the transition matrix
+    Q = P[1:-1, 1:-1] # Probability of moving from transient states to transient states
+    I = np.identity(Q.shape[0]) # Identity matrix
+    N = np.linalg.inv(I - Q) # Fundamental matrix
+    expected_times = N.sum(axis=1) # Expected time to absorption for each transient state
+    return expected_times
+
+
 # When the user clicks "Run simulation"
 if submit_button:
     
@@ -85,7 +123,12 @@ if submit_button:
     n_fixations, n_eliminations, time_to_fixation, time_to_elimination = calculate_simulated_stats(trajectories, N)
     st.write(f"Number of fixations: {n_fixations}")
     st.write(f"Number of eliminations: {n_eliminations}")
-    st.write(f"Average time to fixation: {time_to_fixation:.2f} generations")
-    st.write(f"Average time to elimination: {time_to_elimination:.2f} generations")
+    st.write(f"Average time to fixation (simulated): {time_to_fixation:.2f} generations")
+    st.write(f"Average time to elimination (simulated): {time_to_elimination:.2f} generations")
+    fixation_probability, elimination_probability, expected_time_to_absorption = calculate_theoretical_stats(P, N_A0, u, v)
+    if fixation_probability is not None:
+        st.write(f"Theoretical fixation probability: {fixation_probability:.4f}")
+        st.write(f"Theoretical elimination probability: {elimination_probability:.4f}")
+        st.write(f"Theoretical expected time to either fixation or elimination: {expected_time_to_absorption:.2f} generations")
 
 
