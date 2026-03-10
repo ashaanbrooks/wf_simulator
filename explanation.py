@@ -81,4 +81,11 @@ g_i = 1 + \sum_{j=0}^{2N} P_{ij} g_j
 
 st.markdown(r"""
 This equation says that to find the time until fixation or elimination starting from $i$ copies of allele A, we take 1 generation (the time step) plus the expected time to fixation or elimination starting from $j$ copies of allele A, multiplied by the probability of moving from $i$ copies of allele A to $j$ copies of allele A. We do this for all possible values of $j$, and add them together. This creates a system of linear equations that can be solved to find the expected time to fixation or elimination starting at any copy number.            
+            """)
+
+st.markdown(r"""
+## Sources
+Hartl, D. L., & Clark, A. G. (2007). Principles of population genetics (4th ed.). Sinauer Associates, Inc. Publishers.
+Kryukov, I. (2019, December 23). (thesis). Direct Solutions of the Wright-Fisher Model. University of Calgary. Retrieved March 10, 2016, from http://hdl.handle.net/1880/111434. 
+H. Pishro-Nik, "Introduction to probability, statistics, and random processes", available at https://www.probabilitycourse.com, Kappa Research LLC, 2014.
 """)
