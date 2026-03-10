@@ -31,7 +31,7 @@ def wright_fisher_transition(N, u, v, w_AA, w_Aa, w_aa):
     p_selection = ((i/N) ** 2 * w_AA + (i/N) * (1 - i/N) * w_Aa) / (w_AA * (i/N) ** 2 + w_Aa * 2 * (i/N) * (1 - i/N) + w_aa * (1 - i/N) ** 2)
     p = p_selection * (1 - u) + (1 - p_selection) * v # Final allele frequency after selection and mutation
     
-    j = np.arange(N+1)              # shape (N+1,)
+    j = np.arange(N+1)              
     
     # Broadcast: p is (N+1, 1), j is (1, N+1) → P is (N+1, N+1)
     P = binom.pmf(j[np.newaxis, :], N, p[:, np.newaxis])
