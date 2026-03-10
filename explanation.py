@@ -86,6 +86,8 @@ This equation says that to find the time until fixation or elimination starting 
 st.markdown(r"""
 ## Sources
 Hartl, D. L., & Clark, A. G. (2007). Principles of population genetics (4th ed.). Sinauer Associates, Inc. Publishers.
-Kryukov, I. (2019, December 23). (thesis). Direct Solutions of the Wright-Fisher Model. University of Calgary. Retrieved March 10, 2016, from http://hdl.handle.net/1880/111434. 
+
+Kryukov, I. (2019, December 23). (thesis). Direct Solutions of the Wright-Fisher Model. University of Calgary. Retrieved March 10, 2016, from http://hdl.handle.net/1880/111434.
+            
 H. Pishro-Nik, "Introduction to probability, statistics, and random processes", available at https://www.probabilitycourse.com, Kappa Research LLC, 2014.
 """)
